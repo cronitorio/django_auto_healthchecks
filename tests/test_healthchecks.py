@@ -9,8 +9,6 @@ Tests for `django_auto_healthchecks` module.
 """
 
 import pytest
-
-
 import django_auto_healthchecks
 
 
@@ -28,3 +26,4 @@ def test_content(response):
     """
     # from bs4 import BeautifulSoup
     # assert 'GitHub' in BeautifulSoup(response.content).title.string
+

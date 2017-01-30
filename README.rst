@@ -26,6 +26,5 @@ Create global healthchecks directly from your django urls.py.
 Credits
 ---------
 
-This package was created with Cookiecutter_.
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
+This package was created with Cookiecutter: https://github.com/audreyr/cookiecutter
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+from setuptools.command.test import test as TestCommand
 from setuptools import setup
 
 with open('README.rst') as readme_file:
@@ -15,8 +15,22 @@ requirements = [
 ]
 
 test_requirements = [
-    # TODO: put package test requirements here
+    "pytest",
+    "django==1.10.1"
 ]
+
+
+class PyTest(TestCommand):
+
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        # import here, cause outside the eggs aren't loaded
+        import pytest
+        pytest.main(self.test_args)
 
 setup(
     name='django_auto_healthchecks',
@@ -49,6 +63,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
-    test_suite='tests',
-    tests_require=test_requirements
+    test_suite='tests.test_healthchecks',
+    tests_require=test_requirements,
+    cmdclass={'test': PyTest},
 )
