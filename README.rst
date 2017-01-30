@@ -18,23 +18,14 @@ Django Auto Healthchecks
      :alt: Updates
 
 
-Create global healthchecks directly from your django urls.py
-
-
+Create global healthchecks directly from your django urls.py.
 * Free software: MIT license
 * Documentation: https://django-auto-healthchecks.readthedocs.io.
 
 
-Features
---------
-
-* TODO
-
 Credits
 ---------
 
-This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
-
+This package was created with Cookiecutter_.
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 

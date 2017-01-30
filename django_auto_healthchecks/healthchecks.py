@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.conf.urls import url as django_url
 from django.core.urlresolvers import reverse
 from django.conf import settings

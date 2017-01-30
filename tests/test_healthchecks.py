@@ -11,7 +11,7 @@ Tests for `django_auto_healthchecks` module.
 import pytest
 
 
-from django_auto_healthchecks import django_auto_healthchecks
+import django_auto_healthchecks
 
 
 @pytest.fixture
