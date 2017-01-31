@@ -16,7 +16,7 @@ DOCS_URL = 'https://cronitor.io/docs/django-healthchecks'
 
 DEFAULTS = {
     'API_KEY': None,
-    'VERBOSE': True,
+    'VERBOSE': False,
     'HTTPS': False,
     'TEMPLATE': {},
 }
@@ -70,6 +70,9 @@ class Healthcheck(object):
         self.interval_seconds = interval_seconds
         self.timeout_seconds = timeout_seconds
 
+        # When in DEBUG mode, create monitors in Dev mode
+        self.is_dev = settings.DEBUG
+
         # These will be defined later during resolve():
         self._url = None
         self._defaultName = None
@@ -107,7 +110,8 @@ class Healthcheck(object):
             'type': 'healthcheck',
             'code': self.code,
             'defaultName': self._defaultName,
-            'request': request
+            'request': request,
+            'dev': self.is_dev
         }
 
         if self.name:
@@ -154,8 +158,8 @@ class Healthcheck(object):
         """ Generate a unique identifier for this monitor that can be used to update the monitor even if the name
         is changed on the Cronitor dashboard.
         :return: str """
-        signature = hashlib.sha1(self.name if self.name else self._defaultName).digest()
-        return base64.b64encode(signature).replace('+', '').replace('/', '')[:12]
+        signature = hashlib.sha1('{}{}'.format(self.is_dev, self.name if self.name else self._defaultName))
+        return base64.b64encode(signature.digest()).replace('+', '').replace('/', '')[:12]
 
 
 class HealthcheckUrl(object):
@@ -178,18 +182,25 @@ class HealthcheckUrl(object):
         :return: string
         :raises HealthcheckError """
 
-        # First look in settings.HEALTHCHECKS['HOSTNAME'] and settings.HOSTNAME
+        # First look in settings.HEALTHCHECKS['HOSTNAME']
         try:
             if _get_setting('HOSTNAME'):
                 return _get_setting('HOSTNAME')
         except HealthcheckError:
             pass
 
+        # Then try settings.HOSTNAME, if it exists
+        try:
+            if hasattr(settings, 'HOSTNAME') and len(settings.HOSTNAME):
+                return settings.HOSTNAME
+        except (AttributeError, TypeError):
+            pass
+
         # Finally, pop the first value from settings.ALLOWED_HOSTS
         try:
             if hasattr(settings, 'ALLOWED_HOSTS') and len(settings.ALLOWED_HOSTS):
                 return settings.ALLOWED_HOSTS[0]
-        except AttributeError:
+        except (AttributeError, TypeError, KeyError):
             pass
 
         raise HealthcheckError(
@@ -245,46 +256,45 @@ class IdempotentHealthcheckClient(object):
         map(self.enqueue, (additional_healthchecks or ()))
         healthchecks = self.drain()
 
-        if len(healthchecks):
+        if len(healthchecks) == 0:
+            self._messages.append(
+                (logging.WARN, 'No healthchecks defined. See {} to get started.'.format(DOCS_URL))
+            )
+        else:
             try:
                 payload = [hc.serialize() for hc in healthchecks]
                 api_key = _get_setting('API_KEY')
 
-                if _enabled():
-                    if api_key:
-                        try:
-                            r = requests.put(ENDPOINT_URL, json=payload, auth=(api_key, ''), timeout=5)
-                            if r.status_code != requests.codes.ok:
-                                raise HealthcheckError(r.text)
-                        except Exception as e:
-                            self._messages.append((
-                                logging.ERROR,
-                                'Cronitor healthchecks could not be published. Details:\n\n{}'.format(e)
-                            ))
+                if api_key:
+                    try:
+                        r = requests.put(ENDPOINT_URL, json=payload, auth=(api_key, ''), timeout=5)
+                        if r.status_code != requests.codes.ok:
+                            raise HealthcheckError(r.text)
+                    except Exception as e:
+                        self._messages.append((
+                            logging.ERROR,
+                            'Cronitor healthchecks could not be published. Details:\n\n{}'.format(e)
+                        ))
                 else:
-                    message = ''
-                    if _get_setting('VERBOSE'):
-                        message = json.dumps(payload, indent=2) + '\n\n'
-
                     self._messages.append((
-                        logging.WARN,
-                        'DRY-RUN: settings.DEBUG is True. To overload this behavior, '
-                        'use settings.HEALTHCHECKS["ENABLED"].\n\nPUT {}:\n{}'.format(ENDPOINT_URL, message)
+                        logging.ERROR,
+                        'Missing Cronitor API key. Set settings.HEALTHCHECKS["API_KEY"] to publish healthchecks.'
                     ))
 
-                if not api_key:
+                if settings.DEBUG:
                     self._messages.append((
-                        logging.ERROR if _enabled() else logging.WARN,
-                        'Missing Cronitor API key. Set settings.HEALTHCHECKS["API_KEY"] to publish healthchecks.'
+                        logging.INFO,
+                        'DEV MODE: settings.DEBUG is True. Monitors will be created in Dev mode.'
+                    ))
+
+                if _get_setting('VERBOSE'):
+                    self._messages.append((
+                        logging.INFO,
+                        'PUT {}:\n{}\n\n'.format(ENDPOINT_URL, json.dumps(payload, indent=2))
                     ))
 
             except HealthcheckError as e:
                 self._messages.append((logging.ERROR, str(e)))
-
-        else:
-            self._messages.append(
-                (logging.WARN, 'No healthchecks defined. See {} to get started.'.format(DOCS_URL))
-            )
 
         self._flush_messages_to_log()
 
@@ -308,10 +318,11 @@ def url(regex, view, healthcheck=None, **kwargs):
 
     if isinstance(healthcheck, Healthcheck):
         if isinstance(view, (list, tuple)):
-            raise HealthcheckError('Healthchecks must be defined on individual routes')
-
-        healthcheck.route = kwargs.get('name')
-        Client.enqueue(healthcheck)
+            if settings.DEBUG:
+                raise HealthcheckError('Healthchecks must be defined on individual routes')
+        else:
+            healthcheck.route = kwargs.get('name')
+            Client.enqueue(healthcheck)
 
     return django_url(regex, view, **kwargs)
 
@@ -324,17 +335,6 @@ def put(healthchecks=()):
     Client.put(healthchecks)
 
 
-def _enabled():
-    # If it's been enabled or disabled explicitly, follow instructions
-    try:
-        return _get_setting('ENABLED')
-    except RuntimeError:
-        pass
-
-    # Otherwise, it's enabled when DEBUG is False.
-    return not _get_setting('DEBUG')
-
-
 def _get_setting(key):
     """ For any given setting, look in the HEALTHCHECKS key of the django settings object and global key in settings obj.
     If it's not there, look for default in DEFAULTS
@@ -342,9 +342,6 @@ def _get_setting(key):
     :return: * """
     if hasattr(settings, 'HEALTHCHECKS') and key in settings.HEALTHCHECKS:
         return settings.HEALTHCHECKS[key]
-
-    if hasattr(settings, key):
-        return getattr(settings, key)
 
     if key in DEFAULTS:
         return DEFAULTS[key]
