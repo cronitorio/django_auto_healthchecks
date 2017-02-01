@@ -18,7 +18,7 @@ DEFAULTS = {
     'API_KEY': None,
     'VERBOSE': False,
     'HTTPS': False,
-    'TEMPLATE': {},
+    'TAGS': [],
 }
 
 
@@ -121,11 +121,13 @@ class Healthcheck(object):
         if self.interval_seconds:
             definition['request_interval_seconds'] = self.interval_seconds
         if self.tags:
-            definition['tags'] = self.tags
+            definition['tags'] = self.tags + _get_setting('TAGS')
+        elif _get_setting('TAGS'):
+            definition['tags'] = _get_setting('TAGS')
         if self.note:
             definition['note'] = self.note
 
-        return dict(_get_setting('TEMPLATE'), **definition)
+        return definition
 
     def _reverse(self):
         # First, try the route name with a namespace
@@ -158,7 +160,7 @@ class Healthcheck(object):
         """ Generate a unique identifier for this monitor that can be used to update the monitor even if the name
         is changed on the Cronitor dashboard.
         :return: str """
-        signature = hashlib.sha1('{}{}'.format(self.is_dev, self.name if self.name else self._defaultName))
+        signature = hashlib.sha1('{}{}'.format(self.is_dev, self._defaultName))
         return base64.b64encode(signature.digest()).replace('+', '').replace('/', '')[:12]
 
 
@@ -283,13 +285,13 @@ class IdempotentHealthcheckClient(object):
 
                 if settings.DEBUG:
                     self._messages.append((
-                        logging.INFO,
+                        logging.WARN,
                         'DEV MODE: settings.DEBUG is True. Monitors will be created in Dev mode.'
                     ))
 
                 if _get_setting('VERBOSE'):
                     self._messages.append((
-                        logging.INFO,
+                        logging.WARN,
                         'PUT {}:\n{}\n\n'.format(ENDPOINT_URL, json.dumps(payload, indent=2))
                     ))
 

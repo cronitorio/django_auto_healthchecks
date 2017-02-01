@@ -89,6 +89,7 @@ DATABASES = {
 HEALTHCHECKS = {
     'API_KEY': '60d12a7093c9465398de00bd75a2b54d',
     'VERBOSE': True,
+    'TAGS': ['Demo App', 'Mysite']
 }
 
 
