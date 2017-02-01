@@ -59,7 +59,7 @@ class Healthcheck(object):
         self.current_app = current_app
         self.name = name
         self.code = code
-        self.method = method
+        self.method = method.upper()
         self.querystring = querystring if querystring else {}
         self.body = body
         self.headers = headers
@@ -93,18 +93,25 @@ class Healthcheck(object):
     def serialize(self):
         """ Serialize current instance details into valid API payload
         :return: dict """
+
+        assert self.method in ('GET', 'POST', 'PUT', 'HEAD', 'OPTIONS', 'PATCH'), \
+            "Healthcheck request method must be GET, POST, PUT, HEAD, OPTIONS or PATCH"
+
         request = {
             'url': self._url.url,
             'method': self.method
         }
         if self.cookies:
+            assert isinstance(self.cookies, dict), "Healthcheck request cookies must be a dict"
             request['cookies'] = self.cookies
         if self.headers:
+            assert isinstance(self.headers, dict), "Healthcheck request headers must be a dict"
             request['headers'] = self.headers
+        if self.timeout_seconds:
+            assert isinstance(self.timeout_seconds, int), "Healthcheck request timeout_seconds must be an int"
+            request['timeout_seconds'] = self.timeout_seconds
         if self.body:
             request['body'] = self.body
-        if self.timeout_seconds:
-            request['timeout_seconds'] = self.timeout_seconds
 
         definition = {
             'type': 'healthcheck',
@@ -116,14 +123,24 @@ class Healthcheck(object):
 
         if self.name:
             definition['name'] = self.name
+
         if self.assertions:
+            assert isinstance(self.assertions, dict), "Healthcheck assertions must be a dict"
             definition['rules'] = self.assertions
+
         if self.interval_seconds:
+            assert isinstance(self.interval_seconds, int), "Healthcheck interval_seconds must be an int"
             definition['request_interval_seconds'] = self.interval_seconds
+
         if self.tags:
-            definition['tags'] = self.tags + _get_setting('TAGS')
+            assert isinstance(definition['tags'], (list, tuple, set)), \
+                "Healthcheck tags must be in a list, tuple or set"
+            definition['tags'] = set(self.tags + _get_setting('TAGS'))
         elif _get_setting('TAGS'):
+            assert isinstance(_get_setting('TAGS'), (list, tuple, set)), \
+                "settings.HEALTHCHECKS['TAGS'] must be a list, tuple or set"
             definition['tags'] = _get_setting('TAGS')
+
         if self.note:
             definition['note'] = self.note
 
@@ -264,9 +281,17 @@ class IdempotentHealthcheckClient(object):
             )
         else:
             try:
-                payload = [hc.serialize() for hc in healthchecks]
-                api_key = _get_setting('API_KEY')
+                payload = []
+                for healthcheck in healthchecks:
+                    try:
+                        payload.append(healthcheck.serialize())
+                    except AssertionError as e:
+                        self._messages.append((
+                            logging.ERROR,
+                            'Healthcheck will not be published. Validation error: {}'.format(e)
+                        ))
 
+                api_key = _get_setting('API_KEY')
                 if api_key:
                     try:
                         r = requests.put(ENDPOINT_URL, json=payload, auth=(api_key, ''), timeout=5)
@@ -285,13 +310,13 @@ class IdempotentHealthcheckClient(object):
 
                 if settings.DEBUG:
                     self._messages.append((
-                        logging.WARN,
+                        logging.INFO,
                         'DEV MODE: settings.DEBUG is True. Monitors will be created in Dev mode.'
                     ))
 
                 if _get_setting('VERBOSE'):
                     self._messages.append((
-                        logging.WARN,
+                        logging.INFO,
                         'PUT {}:\n{}\n\n'.format(ENDPOINT_URL, json.dumps(payload, indent=2))
                     ))
 
