@@ -125,15 +125,17 @@ class Healthcheck(object):
             definition['name'] = self.name
 
         if self.assertions:
-            assert isinstance(self.assertions, dict), "Healthcheck assertions must be a dict"
+            assert isinstance(self.assertions, (list, tuple, set)), \
+                "Healthcheck assertions must be a list, tuple or set"
             definition['rules'] = self.assertions
 
         if self.interval_seconds:
-            assert isinstance(self.interval_seconds, int), "Healthcheck interval_seconds must be an int"
+            assert isinstance(self.interval_seconds, int), \
+                "Healthcheck interval_seconds must be an int"
             definition['request_interval_seconds'] = self.interval_seconds
 
         if self.tags:
-            assert isinstance(definition['tags'], (list, tuple, set)), \
+            assert isinstance(self.tags, (list, tuple, set)), \
                 "Healthcheck tags must be in a list, tuple or set"
             definition['tags'] = set(self.tags + _get_setting('TAGS'))
         elif _get_setting('TAGS'):
@@ -175,7 +177,8 @@ class Healthcheck(object):
 
     def _create_code(self):
         """ Generate a unique identifier for this monitor that can be used to update the monitor even if the name
-        is changed on the Cronitor dashboard.
+        is changed on the Cronitor dashboard. Include is_dev in the hash to differentiate between dev and prod
+        versions of a monitor
         :return: str """
         signature = hashlib.sha1('{}{}'.format(self.is_dev, self._defaultName))
         return base64.b64encode(signature.digest()).replace('+', '').replace('/', '')[:12]

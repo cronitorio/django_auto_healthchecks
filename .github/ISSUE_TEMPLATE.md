@@ -1,4 +1,5 @@
 * Django Auto Healthchecks version:
+* Django version:
 * Python version:
 * Operating System:
 
