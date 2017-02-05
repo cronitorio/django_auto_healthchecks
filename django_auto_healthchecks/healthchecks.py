@@ -27,31 +27,43 @@ class HealthcheckError(RuntimeError):
 
 
 class Healthcheck(object):
-    """
-    Define a healthcheck using a django url route that will be put to the Cronitor API
-    """
 
     def __init__(self, route=None, args=None, kwargs=None, current_app=None, name=None, code=None, method='GET',
                  querystring=None, body=None, headers=None, cookies=None, assertions=None, tags=None, note=None,
                  interval_seconds=None, timeout_seconds=None):
-        """
-        :param route: str Name of a url route. If omitted, must be set before resolve()
-        :param args: list|tuple Optional args to be passed to `reverse()` this route. Cannot be used with `kwargs`.
-        :param kwargs: dict Optional kwargs to be passed to `reverse()` this route. Cannot be used with `args`.
-        :param current_app:  If the app is namespaced or route name is not unique the `current_app`
-               argument is needed for `reverse()`.
-        :param name: str Optional name for this monitor. If none is provided, a name will be generated.
-        :param code: str Optional monitor code. Use this to tie to an existing healthcheck on your Cronitor dashboard.
-        :param method: str Request method used when performing this healthcheck.
-        :param querystring: dict Optional querystring parameters that will be appended to the URL
-        :param body: str Request body sent when performing this healthcheck if method is PUT, POST or PATCH.
-        :param headers: dict Optional request headers that will be sent when performing this healthcheck.
-        :param cookies: dict Optional cookies that will be sent when performing this healthcheck.
-        :param assertions: dict Optional assertions for this monitor. See API docs for details.
-        :param tags: list|tuple Optional tags for this monitor.
-        :param note: string Optional note that will be attached to this monitor.
-        :param interval_seconds: int Optional interval between healthcheck tests. If omitted, a default will be used.
-        :param timeout_seconds: int Optional timeout for this request, maximum of 10 seconds.
+        """ Define a healthcheck using a django url route that will be put to the Cronitor API
+
+                route (str): Name of a url route. If omitted, must be set before resolve().
+
+                args (list|tuple): Optional args to be passed to `reverse()` this route. Cannot be used with `kwargs`.
+
+                kwargs (dict): Optional kwargs to be passed to `reverse()` this route. Cannot be used with `args`.
+
+                current_app (str): If the app is namespaced or route name is not unique the `current_app` argument is needed for `reverse()`.
+
+                name (str): Optional name for this monitor. If none is provided, a name will be generated.
+
+                code (str): Optional monitor code. Use this to tie to an existing healthcheck on your Cronitor dashboard.
+
+                method (str): Request method used when performing this healthcheck.
+
+                querystring (dict): Optional querystring parameters that will be appended to the URL
+
+                body (str): Request body sent when performing this healthcheck if method is PUT, POST or PATCH.
+
+                headers (dict): Optional request headers that will be sent when performing this healthcheck.
+
+                cookies (dict): Optional cookies that will be sent when performing this healthcheck.
+
+                assertions (dict): Optional assertions for this monitor. See API docs for details.
+
+                tags (list|tuple): Optional tags for this monitor.
+
+                note (string): Optional note that will be attached to this monitor.
+
+                interval_seconds (int): Optional interval between healthcheck tests. If omitted, a default will be used.
+
+                timeout_seconds (int): Optional timeout for this request, maximum of 10 seconds.
         """
         self.route = route
         self.args = args if args else ()
