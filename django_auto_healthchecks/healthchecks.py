@@ -10,8 +10,7 @@ import json
 import logging
 import requests
 
-# @todo proper url
-ENDPOINT_URL = 'http://dev.cronitor.io/v3/monitors'
+ENDPOINT_URL = 'https://cronitor.io/v3/monitors'
 DOCS_URL = 'https://cronitor.io/docs/django-healthchecks'
 
 DEFAULTS = {
