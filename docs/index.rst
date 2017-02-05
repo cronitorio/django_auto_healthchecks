@@ -1,4 +1,4 @@
-Welcome to Django Auto Healthchecks's documentation!
+Documentation for django-auto-healthchecks by Cronitor.io
 ======================================
 
 Contents:
