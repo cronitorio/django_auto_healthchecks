@@ -314,7 +314,7 @@ class IdempotentHealthcheckClient(object):
                     except Exception as e:
                         self._messages.append((
                             logging.ERROR,
-                            'Cronitor healthchecks could not be published. Details:\n\n{}'.format(e)
+                            'Cronitor healthchecks could not be published. Request failure. Details:\n\n{}'.format(e)
                         ))
                 else:
                     self._messages.append((

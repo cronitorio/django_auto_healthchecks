@@ -31,35 +31,122 @@ def healthcheck_instance():
     return instance
 
 
-def test_dev_mode_when_debug_true():
-    pass
+@mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
+def test_dev_mode_when_debug_true(mock_reverse):
+    healthchecks.settings = MockSettings(HEALTHCHECKS={'HOSTNAME': 'cronitor.io'}, DEBUG=True)
+    healthcheck = healthchecks.Healthcheck()
+    healthcheck.resolve()
+    payload = healthcheck.serialize()
+    assert mock_reverse.call_count == 1, "Expected reverse() call once"
+    assert 'dev' in payload, "Serialized payload missing 'dev' field"
+    assert payload['dev'], "Expected dev to be True"
+
+@mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
+def test_dev_mode_false_when_debug_false(mock_reverse):
+    healthchecks.settings = MockSettings(HEALTHCHECKS={'HOSTNAME': 'cronitor.io'}, DEBUG=False)
+    healthcheck = healthchecks.Healthcheck()
+    healthcheck.resolve()
+    payload = healthcheck.serialize()
+    assert mock_reverse.call_count == 1, "Expected reverse() call once"
+    assert 'dev' in payload, "Serialized payload missing 'dev' field"
+    assert not payload['dev'], "Expected dev to be False"
+
+@mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
+def test_dev_mode_changes_generated_code(mock_reverse):
+    healthchecks.settings = MockSettings(HEALTHCHECKS={'HOSTNAME': 'cronitor.io'}, DEBUG=True)
+    healthcheck = healthchecks.Healthcheck()
+    healthcheck.resolve()
+    devCode = healthcheck.code
+
+    healthchecks.settings = MockSettings(HEALTHCHECKS={'HOSTNAME': 'cronitor.io'}, DEBUG=False)
+    healthcheck = healthchecks.Healthcheck()
+    healthcheck.resolve()
+    prodCode = healthcheck.code
+
+    assert devCode != prodCode, "Expected DEBUG flag to change generated job code"
+
+@mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
+def test_name_change_does_not_change_generated_code(mock_reverse):
+    healthchecks.settings = MockSettings(HEALTHCHECKS={'HOSTNAME': 'cronitor.io'}, DEBUG=True)
+    healthcheck = healthchecks.Healthcheck()
+    healthcheck.resolve()
+    devCode = healthcheck.code
+    healthcheck = healthchecks.Healthcheck(name="Something better than the default name")
+    healthcheck.resolve()
+    prodCode = healthcheck.code
+
+    assert devCode == prodCode, "Name change should not affect produced job code"
 
 
-def test_dev_mode_false_when_debug_false():
-    pass
+@mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
+def test_url_resolve_call(mock_reverse):
+    route_name = 'example-route-name'
+    healthchecks.settings = MockSettings(HEALTHCHECKS={'HOSTNAME': 'cronitor.io'}, DEBUG=True)
+    healthcheck = healthchecks.Healthcheck(route=route_name)
+    healthcheck.resolve()
+    payload = healthcheck.serialize()
+    assert mock_reverse.call_args == ((route_name,),), "Args not passed to mock django_url"
+    assert '/path/to/endpoint' in payload['request']['url'], "Expected reverse() return path in generated request URL"
 
 
-def test_dev_mode_changes_generated_code():
-    pass
+@mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
+def test_url_resolve_call_includes_current_app_when_provided(mock_reverse):
+    route_name = 'example-route-name'
+    current_app = 'example-app-name'
+    healthchecks.settings = MockSettings(HEALTHCHECKS={'HOSTNAME': 'cronitor.io'}, DEBUG=True)
+    healthcheck = healthchecks.Healthcheck(route=route_name, current_app=current_app)
+    healthcheck.resolve()
+
+    expected_args = ((route_name,), {'current_app': 'example-app-name'})
+    assert mock_reverse.call_args == expectd_args, "Args not passed to mock django_url"
 
 
-def test_name_change_does_not_change_generated_code():
-    pass
+@mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
+def test_monitor_tags_merged_with_settings_tags(mock_reverse):
+    first_tags = ['Django', 'ExampleApp']
+    second_tags = ['LandingPages', 'Django']
+    merged_tags = ['Django', 'ExampleApp', 'LandingPages']
+
+    healthchecks.settings = MockSettings(
+        HEALTHCHECKS={'HOSTNAME': 'cronitor.io', 'TAGS': first_tags},
+        DEBUG=False
+    )
+    healthcheck = healthchecks.Healthcheck(tags=second_tags)
+    healthcheck.resolve()
+    payload = healthcheck.serialize()
+    assert set(payload['tags']) == set(merged_tags), "Tags not merged as expected"
 
 
-@mock.patch('django_auto_healthchecks.healthchecks.resolve')
-def test_url_resolve_call(mock_resolve):
-    pass
+@mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
+def test_serialized_payload_includes_default_parts(mock_reverse):
+    healthchecks.settings = MockSettings(
+        HEALTHCHECKS={'HOSTNAME': 'cronitor.io'},
+        DEBUG=False
+    )
+    healthcheck = healthchecks.Healthcheck()
+    healthcheck.resolve()
+    payload_keys = healthcheck.serialize().keys()
+    assert 'dev' in payload_keys, "Request payload should have 'dev' field"
+    assert 'request' in payload_keys, "Request payload should have 'request' field"
+    assert 'code' in payload_keys, "Request payload should have 'code' field"
+    assert 'defaultName' in payload_keys, "Request payload should have 'defaultName' field"
+    assert 'type' in payload_keys, "Request payload should have 'type' field"
 
 
-@mock.patch('django_auto_healthchecks.healthchecks.resolve')
-def test_url_resolve_call_includes_current_app_when_provided(mock_resolve):
-    pass
-
-
-def test_monitor_tags_merged_with_settings_tags():
-    pass
-
-
-def test_serialized_payload_includes_important_parts():
-    pass
+@mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
+def test_serialized_payload_includes_optional_parts(mock_reverse):
+    healthchecks.settings = MockSettings(
+        HEALTHCHECKS={'HOSTNAME': 'cronitor.io'},
+        DEBUG=False
+    )
+    healthcheck = healthchecks.Healthcheck(name='Example Name', tags=['tag1'], note='Example Note', assertions=[{
+        'rule_type': 'response_body',
+        'operator': 'contains',
+        'value': 'Cosmo',
+    }])
+    healthcheck.resolve()
+    payload_keys = healthcheck.serialize().keys()
+    assert 'rules' in payload_keys, "Request payload should have 'rules' field"
+    assert 'tags' in payload_keys, "Request payload should have 'tags' field"
+    assert 'note' in payload_keys, "Request payload should have 'note' field"
+    assert 'name' in payload_keys, "Request payload should have 'name' field"

@@ -55,16 +55,13 @@ def test_put_does_not_invoke_request_without_api_key(mock_put, healthcheck_insta
 
 @mock.patch('django_auto_healthchecks.healthchecks.requests.put', return_value=MockRequestsResponse(status_code=500))
 def test_request_failure_raises_healthcheck_error(mock_put, healthcheck_instance):
-    healthchecks.settings = MockSettings(HEALTHCHECKS={'API_KEY': 'this is a key'}, DEBUG=True, HOSTNAME='cronitor.io')
+    healthchecks.settings = MockSettings(HEALTHCHECKS={'API_KEY': 'this is a key'}, DEBUG=False, HOSTNAME='cronitor.io')
     healthchecks.Client.enqueue(healthcheck_instance)
-    raised = False
-    try:
-        healthchecks.Client.put()
-    except healthchecks.HealthcheckError:
-        raised = True
-    finally:
-        assert mock_put.call_count == 1, "requests.put not called once"
-        assert raised, "Expected HealthcheckError exception not raised"
+    healthchecks.Client._flush_messages_to_log = lambda: ''
+    healthchecks.Client.put()
+    assert mock_put.call_count == 1, "requests.put not called once"
+    assert 'Request failure' in healthchecks.Client._messages[0][1], \
+        "Expected an error with 'Request failure', got '{}'".format(healthchecks.Client._messages[0][1])
 
 
 def test_drain_queue_drains_the_queue(healthcheck_instance):
