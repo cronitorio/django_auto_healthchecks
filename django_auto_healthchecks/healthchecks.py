@@ -274,7 +274,7 @@ class IdempotentHealthcheckClient(object):
 
             if healthcheck.code in healthchecks:
                 self._messages.append((logging.WARN, u'Duplicate definition definition for {}, last one wins'.format(
-                    str(healthcheck)
+                    unicode(healthcheck)
                 )))
 
             healthchecks[healthcheck.code] = healthcheck
@@ -335,7 +335,7 @@ class IdempotentHealthcheckClient(object):
                     ))
 
             except HealthcheckError as e:
-                self._messages.append((logging.ERROR, str(e)))
+                self._messages.append((logging.ERROR, unicode(e)))
 
         self._flush_messages_to_log()
 

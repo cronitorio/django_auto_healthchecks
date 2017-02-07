@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Tests for `django_auto_healthchecks.healthchecks` module.
+Tests for `django_auto_healthchecks.healthchecks.HealthcheckUrl` class.
 """
 
 try:
