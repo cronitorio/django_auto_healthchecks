@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import healthchecks
+from . import healthchecks
 
 __version__ = '0.1.0'
 

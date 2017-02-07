@@ -11,12 +11,15 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     "requests==2.13.0",
-    "six==1.10.0"
+    "six==1.10.0",
+    "future==0.16.0"
 ]
 
 test_requirements = [
     "pytest",
-    "django==1.10.1"
+    "django==1.10.1",
+    "future==0.16.0",
+    "mock==2.0.0"
 ]
 
 

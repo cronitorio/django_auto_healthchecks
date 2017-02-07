@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future.utils import python_2_unicode_compatible
+from future.standard_library import install_aliases
+install_aliases()
+
 from django.conf.urls import url as django_url
 from django.core.urlresolvers import reverse
 from django.conf import settings
-from urllib import urlencode
+from urllib.parse import urlencode
 import base64
 import django.urls.exceptions
 import hashlib
@@ -25,6 +30,7 @@ class HealthcheckError(RuntimeError):
     pass
 
 
+@python_2_unicode_compatible
 class Healthcheck(object):
 
     def __init__(self, route=None, args=None, kwargs=None, current_app=None, name=None, code=None, method='GET',
@@ -88,7 +94,7 @@ class Healthcheck(object):
         self._url = None
         self._defaultName = None
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name if self.name else self._defaultName
 
     def resolve(self):
@@ -181,7 +187,7 @@ class Healthcheck(object):
     def _create_name(self):
         """ Create a default name e.g. GET www.example.com/login
         :return: str """
-        return u'{} {}'.format(
+        return '{} {}'.format(
             self.method,
             self._url.display
         )
@@ -191,8 +197,10 @@ class Healthcheck(object):
         is changed on the Cronitor dashboard. Include is_dev in the hash to differentiate between dev and prod
         versions of a monitor
         :return: str """
-        signature = hashlib.sha1('{}{}'.format(self.is_dev, self._defaultName))
-        return base64.b64encode(signature.digest()).replace('+', '').replace('/', '')[:12]
+        env = 'dev' if self.is_dev else 'prod'
+        signature = hashlib.sha1(bytes(env + self._defaultName, 'utf-8'))
+        hash = base64.b64encode(signature.digest())
+        return str(hash[:12]).replace('+', '').replace('/', '')
 
 
 class HealthcheckUrl(object):
@@ -206,9 +214,9 @@ class HealthcheckUrl(object):
     def __init__(self, path, querystring):
         scheme = 'https://' if _get_setting('HTTPS') else 'http://'
         hostname = self._get_hostname()
-        querystring = u'?{}'.format(urlencode(querystring)) if querystring else ''
-        self.url = u'{}{}{}{}'.format(scheme, hostname, path, querystring)
-        self.display = u'{}{}'.format(hostname, path)
+        querystring = '?{}'.format(urlencode(querystring)) if querystring else ''
+        self.url = '{}{}{}{}'.format(scheme, hostname, path, querystring)
+        self.display = '{}{}'.format(hostname, path)
 
     def _get_hostname(self):
         """ Try to determine the hostname to use when making the healthcheck request
@@ -273,7 +281,7 @@ class IdempotentHealthcheckClient(object):
             healthcheck.resolve()
 
             if healthcheck.code in healthchecks:
-                self._messages.append((logging.WARN, u'Duplicate definition definition for {}, last one wins'.format(
+                self._messages.append((logging.WARN, 'Duplicate definition definition for {}, last one wins'.format(
                     unicode(healthcheck)
                 )))
 

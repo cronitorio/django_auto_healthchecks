@@ -2,7 +2,7 @@
 from django.apps import AppConfig
 from django.core.urlresolvers import reverse
 import django.urls.exceptions
-import healthchecks
+from . import healthchecks
 
 
 class HealthchecksAppConfig(AppConfig):
