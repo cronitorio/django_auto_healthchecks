@@ -198,7 +198,7 @@ class Healthcheck(object):
         versions of a monitor
         :return: str """
         env = 'dev' if self.is_dev else 'prod'
-        signature = hashlib.sha1(bytes(env + self._defaultName, 'utf-8'))
+        signature = hashlib.sha1(env.encode() + self._defaultName.encode())
         hash = base64.b64encode(signature.digest())
         return str(hash[:12]).replace('+', '').replace('/', '')
 

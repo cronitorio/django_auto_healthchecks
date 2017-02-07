@@ -98,7 +98,7 @@ def test_url_resolve_call_includes_current_app_when_provided(mock_reverse):
     healthcheck.resolve()
 
     expected_args = ((route_name,), {'current_app': 'example-app-name'})
-    assert mock_reverse.call_args == expectd_args, "Args not passed to mock django_url"
+    assert mock_reverse.call_args == expected_args, "Args not passed to mock django_url"
 
 
 @mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')

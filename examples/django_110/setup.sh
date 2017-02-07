@@ -5,7 +5,7 @@
 
     pip -V &> /dev/null || echo "ERROR: PIP is Required"
     virtualenv --version &> /dev/null || pip install virtualenv
-    virtualenv .virtualenv
+    virtualenv -p python3 .virtualenv
     source ./.virtualenv/bin/activate
     pip install -r requirements.txt
 

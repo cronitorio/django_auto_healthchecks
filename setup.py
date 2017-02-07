@@ -14,10 +14,9 @@ requirements = [
     "future==0.16.0"
 ]
 
-test_requirements = [
+test_requirements = requirements + [
     "pytest",
     "django==1.10.1",
-    "future==0.16.0",
     "mock==2.0.0"
 ]
 
