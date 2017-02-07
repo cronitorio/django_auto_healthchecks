@@ -11,7 +11,6 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     "requests==2.13.0",
-    "six==1.10.0",
     "future==0.16.0"
 ]
 
@@ -38,7 +37,7 @@ class PyTest(TestCommand):
 setup(
     name='django_auto_healthchecks',
     version='0.1.0',
-    description="Create global healthchecks directly from your django urls.py",
+    description="Create application health checks directly from your django urls.py",
     long_description=readme + '\n\n' + history,
     author="Cronitor.io",
     author_email='support@cronitor.io',

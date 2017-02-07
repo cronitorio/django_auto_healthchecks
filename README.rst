@@ -18,7 +18,7 @@ Django Auto Healthchecks
      :alt: Updates
 
 
-Create global healthchecks directly from your django urls.py.
+Create powerful healthchecks directly from your django urls.py with Cronitor.io
 * Free software: MIT license
 * Documentation: https://django-auto-healthchecks.readthedocs.io.
 
@@ -26,5 +26,5 @@ Create global healthchecks directly from your django urls.py.
 Credits
 ---------
 
-This package was created with Cookiecutter: https://github.com/audreyr/cookiecutter
+This package was cut with Cookiecutter: https://github.com/audreyr/cookiecutter
 
