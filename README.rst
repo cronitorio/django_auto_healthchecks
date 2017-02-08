@@ -16,15 +16,15 @@ Django Auto Healthchecks by Cronitor.io
 
 Create application healthchecks directly from your Django ``urls.py`` with `Cronitor.io <https://cronitor.io>`_ and ``django_auto_healthchecks``.
 
-- Define health checks directly from your code, push them to Cronitor in a single request when your app starts.
-- Healthchecks are run instantly after a deploy and as often as every 30 seconds from Cronitor systems in the United States, Europe and Asia.
-- Create powerful assertions like ``response_body contains 'OK'`` and ``response_time < 5 seconds``. Be notified instantly if assertions fail.
+- Define health checks directly from your code. Push them to Cronitor in a single request when your app starts.
+- Healthchecks are run instantly after a deploy and as often as every 30 seconds from Cronitor bots in North America, Europe and Asia.
+- Create powerful assertions like ``response_body contains 'OK'`` and ``response_time < 5 seconds``. Be notified instantly if your application is unreachable or any assertions fail.
 - Ensure the right people are notified of downtime with alerts in Slack, PagerDuty, HipChat, Email and SMS.
 
 Getting Started
 ---------------
 
-- Implementation guide: https://cronitor.io/docs/django-healthchecks
+- Implementation guide: https://cronitor.io/docs/django-health-checks
 - Package documentation: https://django-auto-healthchecks.readthedocs.io.
 
 
