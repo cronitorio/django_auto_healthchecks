@@ -20,7 +20,6 @@ DOCS_URL = 'https://cronitor.io/docs/django-healthchecks'
 
 DEFAULTS = {
     'API_KEY': None,
-    'VERBOSE': False,
     'HTTPS': False,
     'TAGS': [],
 }
@@ -336,11 +335,10 @@ class IdempotentHealthcheckClient(object):
                         'DEV MODE: settings.DEBUG is True. Monitors will be created in Dev mode.'
                     ))
 
-                if _get_setting('VERBOSE'):
-                    self._messages.append((
-                        logging.INFO,
-                        'PUT {}:\n{}\n\n'.format(ENDPOINT_URL, json.dumps(payload, indent=2))
-                    ))
+                self._messages.append((
+                    logging.DEBUG,
+                    'PUT {}:\n{}\n\n'.format(ENDPOINT_URL, json.dumps(payload, indent=2))
+                ))
 
             except HealthcheckError as e:
                 self._messages.append((logging.ERROR, unicode(e)))
