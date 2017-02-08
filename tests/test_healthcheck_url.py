@@ -4,6 +4,7 @@
 """
 Tests for `django_auto_healthchecks.healthchecks.HealthcheckUrl` class.
 """
+from __future__ import unicode_literals
 
 try:
     import mock
@@ -55,7 +56,8 @@ def test_url_contains_all_expected_parts():
     }
     healthchecks.settings = MockSettings(HEALTHCHECKS={'HOSTNAME': test_hostname, 'HTTPS': False})
     HcUrl = healthchecks.HealthcheckUrl(test_path, test_querystring)
-    assert 'foo=bar&bar=foo' in HcUrl.url, "URL does not contain querystring"
+    assert 'foo=bar' in HcUrl.url, "URL does not expected contain querystring part"
+    assert 'bar=foo' in HcUrl.url, "URL does not expected contain querystring part"
     assert 'http' in HcUrl.url, "URL does not contain scheme"
     assert test_hostname in HcUrl.url, "URL does not contain hostname"
     assert test_path in HcUrl.url, "URL does not contain path"
