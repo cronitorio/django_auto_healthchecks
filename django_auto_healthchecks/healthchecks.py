@@ -94,6 +94,10 @@ class Healthcheck(object):
         self._defaultName = None
 
     def __str__(self):
+        return self.name()
+
+    def name(self):
+        """ Retrieve the effective name of this healthcheck. """
         return self.name if self.name else self._defaultName
 
     def resolve(self):
@@ -281,7 +285,7 @@ class IdempotentHealthcheckClient(object):
 
             if healthcheck.code in healthchecks:
                 self._messages.append((logging.WARN, 'Duplicate definition definition for {}, last one wins'.format(
-                    unicode(healthcheck)
+                    healthcheck.name()
                 )))
 
             healthchecks[healthcheck.code] = healthcheck
@@ -341,7 +345,7 @@ class IdempotentHealthcheckClient(object):
                 ))
 
             except HealthcheckError as e:
-                self._messages.append((logging.ERROR, unicode(e)))
+                self._messages.append((logging.ERROR, str(e)))
 
         self._flush_messages_to_log()
 
