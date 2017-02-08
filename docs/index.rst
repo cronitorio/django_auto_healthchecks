@@ -1,20 +1,25 @@
-Documentation for django-auto-healthchecks by Cronitor.io
-======================================
-
-Contents:
+Documentation for django_auto_healthchecks by Cronitor.io
+=========================================================
 
 .. toctree::
    :maxdepth: 2
 
-   readme
    installation
    usage
    contributing
    authorshistory
 
-Indices and tables
-==================
 
+Module reference
+==================
+.. toctree::
+   :maxdepth: 2
+
+   django_auto_healthchecks
+
+
+Index
+==================
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`

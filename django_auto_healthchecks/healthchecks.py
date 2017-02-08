@@ -43,7 +43,7 @@ class Healthcheck(object):
                 kwargs (dict): Optional kwargs to be passed to `reverse()` this route. Cannot be used with `args`.
 
                 current_app (str): If the app is namespaced or route name is not unique the `current_app` argument is
-                                   needed for `reverse()`.
+                                    needed for `reverse()`.
 
                 name (str): Optional name for this monitor. If none is provided, a name will be generated.
 
