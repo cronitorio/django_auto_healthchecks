@@ -95,5 +95,7 @@ def test_querystring_in_url_not_display_url():
     }
     healthchecks.settings = MockSettings(HEALTHCHECKS={'HOSTNAME': test_hostname, 'HTTPS': False})
     HcUrl = healthchecks.HealthcheckUrl(test_path, test_querystring)
-    assert 'foo=bar&bar=foo' in HcUrl.url, "URL does not contains querystring"
-    assert 'foo=bar&bar=foo' not in HcUrl.display, "Display URL unexpectedly containss querystring"
+    assert 'foo=bar' in HcUrl.url, "URL does not contains querystring"
+    assert 'bar=foo' in HcUrl.url, "URL does not contains querystring"
+    assert 'foo=bar' not in HcUrl.display, "Display URL unexpectedly containss querystring"
+    assert 'bar=foo' not in HcUrl.display, "Display URL unexpectedly containss querystring"

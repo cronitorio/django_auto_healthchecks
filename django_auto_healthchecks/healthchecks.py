@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from future.utils import python_2_unicode_compatible
 from future.standard_library import install_aliases
 install_aliases()
-
 from django.conf.urls import url as django_url
 from django.core.urlresolvers import reverse
 from django.conf import settings
@@ -43,11 +42,12 @@ class Healthcheck(object):
 
                 kwargs (dict): Optional kwargs to be passed to `reverse()` this route. Cannot be used with `args`.
 
-                current_app (str): If the app is namespaced or route name is not unique the `current_app` argument is needed for `reverse()`.
+                current_app (str): If the app is namespaced or route name is not unique the `current_app` argument is
+                                   needed for `reverse()`.
 
                 name (str): Optional name for this monitor. If none is provided, a name will be generated.
 
-                code (str): Optional monitor code. Use this to tie to an existing healthcheck on your Cronitor dashboard.
+                code (str): Optional monitor code. Use this to tie to an existing healthcheck on your Cronitor dashboard
 
                 method (str): Request method used when performing this healthcheck.
 
