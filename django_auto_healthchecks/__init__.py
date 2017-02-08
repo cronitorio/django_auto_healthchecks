@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from . import healthchecks
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 url = healthchecks.url
 """ url is a drop-in replacement for django URL that adds a new healthcheck kwarg """

@@ -35,7 +35,7 @@ class PyTest(TestCommand):
 
 setup(
     name='django_auto_healthchecks',
-    version='0.1.0',
+    version='0.1.1',
     description="Create application health checks directly from your django urls.py",
     long_description=readme + '\n\n' + history,
     author="Cronitor.io",
