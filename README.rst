@@ -8,7 +8,7 @@ Django Auto Healthchecks by Cronitor.io
 .. image:: https://img.shields.io/travis/cronitorio/django_auto_healthchecks.svg
         :target: https://travis-ci.org/cronitorio/django_auto_healthchecks
 
-.. image:: https://readthedocs.org/projects/django-auto-healthchecks/badge/?version=latest
+.. image:: https://readthedocs.org/projects/django-auto-healthchecks/badge/?version=latest&cb=1
         :target: https://django-auto-healthchecks.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
