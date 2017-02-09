@@ -15,7 +15,7 @@ import logging
 import requests
 
 ENDPOINT_URL = 'https://cronitor.io/v3/monitors'
-DOCS_URL = 'https://cronitor.io/docs/django-healthchecks'
+DOCS_URL = 'https://cronitor.io/docs/django-health-checks'
 
 DEFAULTS = {
     'API_KEY': None,
@@ -96,7 +96,7 @@ class Healthcheck(object):
     def __str__(self):
         return self.name()
 
-    def name(self):
+    def display_name(self):
         """ Retrieve the effective name of this healthcheck. """
         return self.name if self.name else self._defaultName
 
@@ -169,8 +169,14 @@ class Healthcheck(object):
         return definition
 
     def _reverse(self):
-        # First, try the route name with a namespace
+        # The reverse() method accepts either kwargs or args, not both
+
         reverse_kwargs = {}
+        if self.kwargs and self.args and settings.DEBUG:
+            raise HealthcheckError(
+                'Cannot reverse route "{}" with both args and kwargs.'.format(self.display_name())
+            )
+
         if self.kwargs:
             reverse_kwargs['kwargs'] = self.kwargs
         elif self.args:
@@ -271,21 +277,19 @@ class IdempotentHealthcheckClient(object):
 
     def enqueue(self, healthcheck):
         """ Add a healthcheck instance to a queue for later processing.
-        :param Healthcheck healthcheck:
+        healthcheck (Healthcheck): Healthcheck instance to enqueue
         """
         self._queue.append(healthcheck)
 
     def drain(self):
-        """ Drain enqueued healthchecks and return a list of Healthcheck objects
+        """ Drain enqueued healthchecks and return a list of distinct Healthcheck objects
         :return: List[Healthcheck]"""
         healthchecks = {}
         for healthcheck in self._queue:
-            # Routes cannot be reversed at the same time the healthcheck is defined, prepare them for use now.
             healthcheck.resolve()
-
             if healthcheck.code in healthchecks:
                 self._messages.append((logging.WARN, 'Duplicate definition definition for {}, last one wins'.format(
-                    healthcheck.name()
+                    healthcheck.display_name()
                 )))
 
             healthchecks[healthcheck.code] = healthcheck
@@ -302,7 +306,7 @@ class IdempotentHealthcheckClient(object):
 
         if len(healthchecks) == 0:
             self._messages.append(
-                (logging.WARN, 'No healthchecks defined. See {} to get started.'.format(DOCS_URL))
+                (logging.WARN, 'No health checks defined. See {} to get started.'.format(DOCS_URL))
             )
         else:
             try:
@@ -313,7 +317,7 @@ class IdempotentHealthcheckClient(object):
                     except AssertionError as e:
                         self._messages.append((
                             logging.ERROR,
-                            'Healthcheck will not be published. Validation error: {}'.format(e)
+                            'Healthcheck can not be published. Validation error: {}'.format(e)
                         ))
 
                 api_key = _get_setting('API_KEY')
@@ -359,12 +363,11 @@ class IdempotentHealthcheckClient(object):
 
 def url(regex, view, healthcheck=None, **kwargs):
     """ Drop-in replacement for django.conf.urls.url to create and update a Cronitor healthcheck when your app restarts.
-    See https://cronitor.io/docs/healthchecks for details.
-    :param regex:
-    :param view:
-    :param healthcheck: Use True for a simple GET healthcheck. Pass a dict to define custom assertions and notifications
-    :param kwargs:
-    :return:
+    See https://cronitor.io/docs/django-health-checks for details.
+    regex (str): Route regex, passed to `django.conf.urls.url()`
+    view (mixed): Attached view for this route, passed to `django.conf.urls.url()`
+    healthcheck (Healthcheck): Define your healthcheck with a `Healthcheck()` instance.
+    :return RegexURLPattern
     """
 
     if isinstance(healthcheck, Healthcheck):
@@ -379,10 +382,10 @@ def url(regex, view, healthcheck=None, **kwargs):
 
 
 def put(healthchecks=()):
-    """ Atomically create/update healthchecks with supplied list of Healthcheck instances. Use this to put healthchecks
-    from your deploy script, or add healthchecks for third-party apps without having to modify their code.
-    :param healthchecks: list[Healthcheck] of Healthcheck objects These healthchecks will be added to any defined in
-           urls.py file(s). See https://cronitor.io/docs/django-healthchecks for details. """
+    """ Batch create-or-update health checks with supplied list of Healthcheck instances. Invoke from your deploy
+    script, or add healthchecks for third-party apps without having to hack their code.
+    :param healthchecks: list[Healthcheck] of Healthcheck objects These healthchecks will be merged with any defined in
+           urls.py file(s). See https://cronitor.io/docs/django-health-checks for details. """
     Client.put(healthchecks)
 
 

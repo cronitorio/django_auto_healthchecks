@@ -102,6 +102,44 @@ def test_url_resolve_call_includes_current_app_when_provided(mock_reverse):
 
 
 @mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
+def test_url_resolve_call_raises_error_with_both_args_and_kwargs(mock_reverse):
+    route_name = 'example-route-name'
+    healthchecks.settings = MockSettings(HEALTHCHECKS={'HOSTNAME': 'cronitor.io'}, DEBUG=True)
+    healthcheck = healthchecks.Healthcheck(
+        route=route_name,
+        args=('a', 'b'),
+        kwargs={'a': 1, 'b': 2}
+    )
+
+    raised = False
+    try:
+        healthcheck.resolve()
+    except healthchecks.HealthcheckError:
+        raised = True
+    finally:
+        assert raised, "Expected HealthcheckError for using args and kwargs"
+
+
+@mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
+def test_url_resolve_call_raises_no_error_with_both_args_and_kwargs_when_debug_false(mock_reverse):
+    route_name = 'example-route-name'
+    healthchecks.settings = MockSettings(HEALTHCHECKS={'HOSTNAME': 'cronitor.io'}, DEBUG=False)
+    healthcheck = healthchecks.Healthcheck(
+        route=route_name,
+        args=('a', 'b'),
+        kwargs={'a': 1, 'b': 2}
+    )
+
+    raised = True
+    try:
+        healthcheck.resolve()
+    except healthchecks.HealthcheckError:
+        raised = False
+    finally:
+        assert raised, "Expected HealthcheckError for using args and kwargs"
+
+
+@mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
 def test_monitor_tags_merged_with_settings_tags(mock_reverse):
     first_tags = ['Django', 'ExampleApp']
     second_tags = ['LandingPages', 'Django']
