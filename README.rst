@@ -30,6 +30,6 @@ Getting Started
 
 Fine Print
 ----------
-- Currently in open beta. We <3 feedback https://cronitor.io/support
+- Currently in open beta. We <3 feedback https://github.com/cronitorio/django_auto_healthchecks/issues
 - This package was cut with Cookiecutter: https://github.com/audreyr/cookiecutter
 
