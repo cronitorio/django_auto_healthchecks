@@ -31,7 +31,7 @@ class HealthcheckError(RuntimeError):
 @python_2_unicode_compatible
 class Healthcheck(object):
 
-    def __init__(self, route=None, args=None, kwargs=None, current_app=None, name=None, code=None, method='GET',
+    def __init__(self, route=None, args=None, kwargs=None, current_app=None, name=None, key=None, method='GET',
                  querystring=None, body=None, headers=None, cookies=None, assertions=None, tags=None, note=None,
                  interval_seconds=None, timeout_seconds=None):
         """ Define a healthcheck using a django url route that will be put to the Cronitor API
@@ -47,7 +47,7 @@ class Healthcheck(object):
 
                 name (str): Optional name for this monitor. If none is provided, a name will be generated.
 
-                code (str): Optional monitor code. Use this to tie to an existing healthcheck on your Cronitor dashboard
+                key (str): Optional monitor key. Use this to tie to an existing healthcheck.
 
                 method (str): Request method used when performing this healthcheck.
 
@@ -74,7 +74,7 @@ class Healthcheck(object):
         self.kwargs = kwargs if kwargs else {}
         self.current_app = current_app
         self.name = name
-        self.code = code
+        self.key = key
         self.method = method.upper()
         self.querystring = querystring if querystring else {}
         self.body = body
@@ -108,7 +108,7 @@ class Healthcheck(object):
             querystring=self.querystring
         )
         self._defaultName = self._create_name()
-        self.code = self.code if self.code else self._create_code()
+        self.key = self.key if self.key else self._create_key()
 
     def serialize(self):
         """ Serialize current instance details into valid API payload
@@ -135,7 +135,7 @@ class Healthcheck(object):
 
         definition = {
             'type': 'healthcheck',
-            'code': self.code,
+            'key': self.key,
             'defaultName': self._defaultName,
             'request': request,
             'dev': self.is_dev
@@ -201,15 +201,15 @@ class Healthcheck(object):
             self._url.display
         )
 
-    def _create_code(self):
+    def _create_key(self):
         """ Generate a unique identifier for this monitor that can be used to update the monitor even if the name
         is changed on the Cronitor dashboard. Include is_dev in the hash to differentiate between dev and prod
         versions of a monitor
         :return: str """
         env = 'dev' if self.is_dev else 'prod'
         signature = hashlib.sha1(env.encode() + self._defaultName.encode())
-        hash = base64.b64encode(signature.digest())
-        return str(hash[:12]).replace('+', '').replace('/', '')
+        keyhash = base64.b64encode(signature.digest())
+        return keyhash[:12].decode('utf-8').replace('+', '').replace('/', '')
 
 
 class HealthcheckUrl(object):
@@ -287,12 +287,12 @@ class IdempotentHealthcheckClient(object):
         healthchecks = {}
         for healthcheck in self._queue:
             healthcheck.resolve()
-            if healthcheck.code in healthchecks:
+            if healthcheck.key in healthchecks:
                 self._messages.append((logging.WARN, 'Duplicate definition definition for {}, last one wins'.format(
                     healthcheck.display_name()
                 )))
 
-            healthchecks[healthcheck.code] = healthcheck
+            healthchecks[healthcheck.key] = healthcheck
 
         self._queue = []
         return healthchecks.values()

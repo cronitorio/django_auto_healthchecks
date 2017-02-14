@@ -29,7 +29,7 @@ def healthcheck_instance():
             querystring={}
         )
         self._defaultName = self._create_name()
-        self.code = self.code if self.code else self._create_code()
+        self.key = self.key if self.key else self._create_key()
 
     healthchecks.settings = MockSettings(HEALTHCHECKS={'API_KEY': 'this is a key'}, DEBUG=True)
     instance = healthchecks.Healthcheck()

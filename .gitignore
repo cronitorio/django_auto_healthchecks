@@ -24,6 +24,8 @@ var/
 .installed.cfg
 *.egg
 .virtualenv
+.DS_Store
+.*virtualenv
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

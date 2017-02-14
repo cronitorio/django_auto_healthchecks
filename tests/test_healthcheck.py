@@ -10,25 +10,11 @@ try:
 except ImportError:
     from unittest import mock
 
+import json
 import pytest
+import re
 import django_auto_healthchecks.healthchecks as healthchecks
 from . import MockSettings
-
-
-@pytest.fixture
-def healthcheck_instance():
-    def mock_resolve(self):
-        self._url = healthchecks.HealthcheckUrl(
-            path='/path/to',
-            querystring={}
-        )
-        self._defaultName = self._create_name()
-        self.code = self.code if self.code else self._create_code()
-
-    healthchecks.settings = MockSettings(HEALTHCHECKS={'API_KEY': 'this is a key'}, DEBUG=True)
-    instance = healthchecks.Healthcheck()
-    instance.resolve = lambda: mock_resolve(instance)
-    return instance
 
 
 @mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
@@ -52,31 +38,41 @@ def test_dev_mode_false_when_debug_false(mock_reverse):
     assert not payload['dev'], "Expected dev to be False"
 
 @mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
-def test_dev_mode_changes_generated_code(mock_reverse):
+def test_dev_mode_changes_generated_key(mock_reverse):
     healthchecks.settings = MockSettings(HEALTHCHECKS={'HOSTNAME': 'cronitor.io'}, DEBUG=True)
     healthcheck = healthchecks.Healthcheck()
     healthcheck.resolve()
-    devCode = healthcheck.code
+    devKey = healthcheck.key
 
     healthchecks.settings = MockSettings(HEALTHCHECKS={'HOSTNAME': 'cronitor.io'}, DEBUG=False)
     healthcheck = healthchecks.Healthcheck()
     healthcheck.resolve()
-    prodCode = healthcheck.code
+    prodKey = healthcheck.key
 
-    assert devCode != prodCode, "Expected DEBUG flag to change generated job code"
+    assert devKey != prodKey, "Expected DEBUG flag to change generated job key"
 
 @mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
-def test_name_change_does_not_change_generated_code(mock_reverse):
+def test_name_change_does_not_change_generated_key(mock_reverse):
     healthchecks.settings = MockSettings(HEALTHCHECKS={'HOSTNAME': 'cronitor.io'}, DEBUG=True)
     healthcheck = healthchecks.Healthcheck()
     healthcheck.resolve()
-    devCode = healthcheck.code
+    devKey = healthcheck.key
     healthcheck = healthchecks.Healthcheck(name="Something better than the default name")
     healthcheck.resolve()
-    prodCode = healthcheck.code
+    prodKey = healthcheck.key
 
-    assert devCode == prodCode, "Name change should not affect produced job code"
+    assert devKey == prodKey, "Name change should not affect produced job key"
 
+
+@mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
+def test_generated_key_contains_only_valid_chars(mock_reverse):
+    healthchecks.settings = MockSettings(HEALTHCHECKS={'HOSTNAME': 'cronitor.io'}, DEBUG=True)
+    healthcheck = healthchecks.Healthcheck()
+    healthcheck.resolve()
+    healthcheck = healthcheck.serialize()
+    healthcheck = json.loads(json.dumps(healthcheck))
+
+    assert re.compile(r'[A-Za-z0-9]').match(healthcheck['key']), "Invalid healthcheck key: {}".format(healthcheck['key'])
 
 @mock.patch('django_auto_healthchecks.healthchecks.reverse', return_value='/path/to/endpoint')
 def test_url_resolve_call(mock_reverse):
@@ -166,7 +162,7 @@ def test_serialized_payload_includes_default_parts(mock_reverse):
     payload_keys = healthcheck.serialize().keys()
     assert 'dev' in payload_keys, "Request payload should have 'dev' field"
     assert 'request' in payload_keys, "Request payload should have 'request' field"
-    assert 'code' in payload_keys, "Request payload should have 'code' field"
+    assert 'key' in payload_keys, "Request payload should have 'key' field"
     assert 'defaultName' in payload_keys, "Request payload should have 'defaultName' field"
     assert 'type' in payload_keys, "Request payload should have 'type' field"
 
