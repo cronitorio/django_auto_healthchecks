@@ -1,7 +1,7 @@
 from . import views
 
 # Healthchecks defined inline with your routes are pushed to Cronitor automatically when your Django app starts.
-# When settings.DEBUG is True, healthcheck details will be written to stdout and not pushed to Cronitor.
+# When settings.DEBUG is True, healthchecks will be pushed in Development mode and can be viewed from your Dashboard. 
 
 # The django_auto_healthchecks.url method is a drop-in replacement for django.conf.urls.url
 from django_auto_healthchecks import url, Healthcheck
